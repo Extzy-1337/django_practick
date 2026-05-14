@@ -1,5 +1,11 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
+
+# Создаём роутер
+router = DefaultRouter()
+router.register(r'posts', views.PostViewSet)        # /api/posts/
+router.register(r'categories', views.CategoryViewSet)  # /api/categories/
 
 urlpatterns = [
     # WEB маршруты (для браузера)
@@ -14,7 +20,6 @@ urlpatterns = [
     path('categories/create/', views.CategoryCreateView.as_view(), name='category_create'),
     path('categories/<int:pk>/delete/', views.CategoryDeleteView.as_view(), name='category_delete'),
     
-    # ========== API маршруты ==========
-    path('api/posts/', views.PostListAPIView.as_view(), name='api_posts'),
-    path('api/posts/<int:pk>/', views.PostDetailAPIView.as_view(), name='api_post_detail'),
+    # ========== API маршруты (через Router) ==========
+    path('api/', include(router.urls)),  # все API маршруты автоматически
 ]

@@ -2,7 +2,9 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from .models import Post, Category
 from .forms import PostForm
-
+from rest_framework.viewsets import ModelViewSet
+from .models import Post, Category
+from .serializers import PostSerializer, CategorySerializer
 
 # ========== CBV для Post ==========
 
@@ -148,3 +150,21 @@ class PostDetailAPIView(APIView):
             return Response({'error': 'Пост не найден'}, status=status.HTTP_404_NOT_FOUND)
         post.delete()
         return Response({'message': 'Пост удалён'}, status=status.HTTP_204_NO_CONTENT)
+    
+# ========== ViewSet для API ==========
+
+class PostViewSet(ModelViewSet):
+    """
+    ViewSet для модели Post.
+    Автоматически поддерживает: list, create, retrieve, update, partial_update, destroy
+    """
+    queryset = Post.objects.all().order_by('-created_at')
+    serializer_class = PostSerializer
+
+
+class CategoryViewSet(ModelViewSet):
+    """
+    ViewSet для модели Category.
+    """
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
