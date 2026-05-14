@@ -13,17 +13,25 @@
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
+        .card-title a {
+            text-decoration: none;
+            color: #333;
+        }
+        .card-title a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
-    <!-- Навигационная панель -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="{% url 'index' %}">📝 Мой блог</a>
+            <div class="ms-auto">
+                <a href="{% url 'add_post' %}" class="btn btn-success">➕ Новый пост</a>
+            </div>
         </div>
     </nav>
 
-    <!-- Основной контент -->
     <div class="container mt-4">
         <div class="row">
             <div class="col-12">
@@ -36,18 +44,27 @@
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title">{{ post.title }}</h5>
+                        <h5 class="card-title">
+                            <a href="{% url 'post_detail' post.pk %}">{{ post.title }}</a>
+                        </h5>
                         <p class="card-text">{{ post.content|truncatewords:20 }}</p>
                         {% if post.category %}
                         <span class="badge bg-secondary">{{ post.category.name }}</span>
                         {% endif %}
                         <p class="text-muted mt-2 small">{{ post.created_at|date:"d.m.Y H:i" }}</p>
+                        <div class="mt-2">
+                            <a href="{% url 'edit_post' post.pk %}" class="btn btn-sm btn-warning">✏️</a>
+                            <a href="{% url 'delete_post' post.pk %}" class="btn btn-sm btn-danger">🗑️</a>
+                        </div>
                     </div>
                 </div>
             </div>
             {% empty %}
             <div class="col-12">
-                <div class="alert alert-info">Постов пока нет. Зайдите в админку и добавьте первый пост!</div>
+                <div class="alert alert-info">
+                    Постов пока нет. 
+                    <a href="{% url 'add_post' %}">Создайте первый пост!</a>
+                </div>
             </div>
             {% endfor %}
         </div>
