@@ -5,7 +5,10 @@ from .forms import PostForm
 from rest_framework.viewsets import ModelViewSet
 from .models import Post, Category
 from .serializers import PostSerializer, CategorySerializer
-
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from .models import Post, Category
+from .serializers import PostSerializer, CategorySerializer
 # ========== CBV для Post ==========
 
 class PostListView(ListView):
@@ -168,3 +171,24 @@ class CategoryViewSet(ModelViewSet):
     """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+class PostViewSet(ModelViewSet):
+    """
+    ViewSet для модели Post.
+    GET — доступно всем
+    POST, PUT, DELETE — только авторизованным
+    """
+    queryset = Post.objects.all().order_by('-created_at')
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]  # ← ключевая строка
+
+
+class CategoryViewSet(ModelViewSet):
+    """
+    ViewSet для модели Category.
+    GET — доступно всем
+    POST, DELETE — только авторизованным
+    """
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
