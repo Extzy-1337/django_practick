@@ -86,3 +86,65 @@ class CategoryDeleteView(DeleteView):
     model = Category
     template_name = 'main/category_confirm_delete.html'
     success_url = reverse_lazy('category_list')
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Post
+from .serializers import PostSerializer
+
+# ========== API для постов ==========
+
+class PostListAPIView(APIView):
+    """API для получения списка постов и создания нового"""
+    
+    def get(self, request):
+        """GET /api/posts/ — получить все посты"""
+        posts = Post.objects.all().order_by('-created_at')
+        serializer = PostSerializer(posts, many=True)
+        return Response(serializer.data)
+    
+    def post(self, request):
+        """POST /api/posts/ — создать новый пост"""
+        serializer = PostSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PostDetailAPIView(APIView):
+    """API для получения, обновления и удаления одного поста"""
+    
+    def get_object(self, pk):
+        try:
+            return Post.objects.get(pk=pk)
+        except Post.DoesNotExist:
+            return None
+    
+    def get(self, request, pk):
+        """GET /api/posts/<id>/ — получить один пост"""
+        post = self.get_object(pk)
+        if not post:
+            return Response({'error': 'Пост не найден'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = PostSerializer(post)
+        return Response(serializer.data)
+    
+    def put(self, request, pk):
+        """PUT /api/posts/<id>/ — полностью обновить пост"""
+        post = self.get_object(pk)
+        if not post:
+            return Response({'error': 'Пост не найден'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = PostSerializer(post, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, pk):
+        """DELETE /api/posts/<id>/ — удалить пост"""
+        post = self.get_object(pk)
+        if not post:
+            return Response({'error': 'Пост не найден'}, status=status.HTTP_404_NOT_FOUND)
+        post.delete()
+        return Response({'message': 'Пост удалён'}, status=status.HTTP_204_NO_CONTENT)
