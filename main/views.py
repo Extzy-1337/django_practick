@@ -1,40 +1,88 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
-from .models import Post
+from django.urls import reverse_lazy
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from .models import Post, Category
 from .forms import PostForm
 
-def index(request):
-    posts = Post.objects.all().order_by('-created_at')
-    return render(request, 'main/index.html', {'posts': posts})
 
-def post_detail(request, pk):
-    post = get_object_or_404(Post, pk=pk)
-    return render(request, 'main/post_detail.html', {'post': post})
+# ========== CBV для Post ==========
 
-def add_post(request):
-    if request.method == 'POST':
-        form = PostForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('index')
-    else:
-        form = PostForm()
-    return render(request, 'main/add_post.html', {'form': form})
+class PostListView(ListView):
+    """Список всех постов (главная страница)"""
+    model = Post
+    template_name = 'main/post_list.html'
+    context_object_name = 'posts'
+    ordering = ['-created_at']  # сначала новые
 
-def edit_post(request, pk):
-    post = get_object_or_404(Post, pk=pk)
-    if request.method == 'POST':
-        form = PostForm(request.POST, instance=post)
-        if form.is_valid():
-            form.save()
-            return redirect('post_detail', pk=post.pk)
-    else:
-        form = PostForm(instance=post)
-    return render(request, 'main/edit_post.html', {'form': form, 'post': post})
 
-def delete_post(request, pk):
-    post = get_object_or_404(Post, pk=pk)
-    if request.method == 'POST':
-        post.delete()
-        return redirect('index')
-    return render(request, 'main/delete_post.html', {'post': post})
+class PostDetailView(DetailView):
+    """Полный просмотр одного поста"""
+    model = Post
+    template_name = 'main/post_detail.html'
+    context_object_name = 'post'
+
+
+class PostCreateView(CreateView):
+    """Создание нового поста"""
+    model = Post
+    form_class = PostForm
+    template_name = 'main/post_form.html'
+    success_url = reverse_lazy('post_list')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Создать пост'
+        context['button_text'] = 'Создать'
+        return context
+
+
+class PostUpdateView(UpdateView):
+    """Редактирование поста"""
+    model = Post
+    form_class = PostForm
+    template_name = 'main/post_form.html'
+    
+    def get_success_url(self):
+        return reverse_lazy('post_detail', kwargs={'pk': self.object.pk})
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Редактировать пост'
+        context['button_text'] = 'Сохранить'
+        return context
+
+
+class PostDeleteView(DeleteView):
+    """Удаление поста"""
+    model = Post
+    template_name = 'main/post_confirm_delete.html'
+    success_url = reverse_lazy('post_list')
+
+
+# ========== CBV для Category ==========
+
+class CategoryListView(ListView):
+    """Список категорий"""
+    model = Category
+    template_name = 'main/category_list.html'
+    context_object_name = 'categories'
+
+
+class CategoryCreateView(CreateView):
+    """Создание категории"""
+    model = Category
+    fields = ['name']
+    template_name = 'main/category_form.html'
+    success_url = reverse_lazy('category_list')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Создать категорию'
+        context['button_text'] = 'Создать'
+        return context
+
+
+class CategoryDeleteView(DeleteView):
+    """Удаление категории"""
+    model = Category
+    template_name = 'main/category_confirm_delete.html'
+    success_url = reverse_lazy('category_list')
